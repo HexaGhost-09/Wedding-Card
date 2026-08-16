@@ -1,18 +1,18 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, Plus_Jakarta_Sans } from "next/font/google";
+import { Playfair_Display, Jost } from "next/font/google";
 import "./globals.css";
 
-const cormorant = Cormorant_Garamond({
+const playfair = Playfair_Display({
   variable: "--font-serif",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+  weight: ["400", "500", "600"],
   style: ["normal", "italic"],
 });
 
-const jakarta = Plus_Jakarta_Sans({
+const jost = Jost({
   variable: "--font-sans",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600"],
+  weight: ["300", "400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -33,9 +33,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${cormorant.variable} ${jakarta.variable} scroll-smooth h-full antialiased`}
+      className={`${playfair.variable} ${jost.variable} scroll-smooth h-full antialiased`}
     >
-      <body className="font-sans bg-[#0B0F17] text-[#E2E8F0] min-h-full flex flex-col items-center justify-center selection:bg-amber-500/20 selection:text-amber-200">
+      <body className="font-sans bg-[#080c17] text-[#E2E8F0] min-h-full flex flex-col selection:bg-amber-500/20 selection:text-amber-200">
         {children}
       </body>
     </html>
