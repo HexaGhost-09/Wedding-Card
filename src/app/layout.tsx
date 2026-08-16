@@ -17,10 +17,10 @@ const jakarta = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   title: "Thasni & Midlaj — Wedding Celebration",
-  description: "Join us in celebrating the wedding of Thasni & Midlaj on September 20, 2026 at Villa Bella Vista, Florence.",
+  description: "Join us in celebrating the wedding of Thasni & Midlaj on September 6, 2026 at Parkon Auditorium.",
   openGraph: {
     title: "Thasni & Midlaj — Wedding Invitation",
-    description: "Join us in celebrating our wedding on September 20, 2026.",
+    description: "Join us in celebrating our wedding on September 6, 2026 at Parkon Auditorium.",
     type: "website",
   },
 };
