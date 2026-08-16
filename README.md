@@ -1,36 +1,119 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 💍 Modern Wedding Invitation Website Template
 
-## Getting Started
+A beautiful, elegant, and fully customizable wedding invitation website built with **Next.js**, **React**, and **Tailwind CSS**. Designed to be easily used as a template for your own wedding or client project!
 
-First, run the development server:
+---
+
+## 🚀 Quick Start & Customization Guide
+
+Use this repository as a template to quickly create your own wedding invitation website in 4 simple steps.
+
+### 1. Use as Template / Clone Repository
+
+Click **"Use this template"** on GitHub or clone the repository:
+
+```bash
+git clone https://github.com/HexaGhost-09/Wedding-Card.git
+cd Wedding-Card
+```
+
+### 2. Install Dependencies
+
+```bash
+npm install
+```
+
+### 3. Customize Your Wedding Details ✍️
+
+All data (couple names, date, venue, location link, story, photos, schedule, FAQs, registry, etc.) is configured in a single file!
+
+Open [`src/data/weddingData.ts`](./src/data/weddingData.ts) and edit:
+
+```typescript
+export const weddingData: WeddingData = {
+  couple: {
+    brideFirstName: "Thasni",
+    brideLastName: "",
+    groomFirstName: "Midlaj",
+    groomLastName: "",
+    initials: "T & M",
+    tagline: "Together with their families, invite you to celebrate their wedding day.",
+    welcomeMessage: "We are deeply grateful for your presence in our lives...",
+    heroImage: "https://your-image-url.com/hero.jpg",
+    bridePhoto: "https://your-image-url.com/bride.jpg",
+    groomPhoto: "https://your-image-url.com/groom.jpg",
+    // ...
+  },
+  date: {
+    targetIsoDate: "2026-09-06T12:00:00", // ISO format for countdown timer
+    displayDate: "September 6, 2026",
+    displayTime: "12:00 PM",
+    dayOfWeek: "Sunday",
+  },
+  venue: {
+    name: "Parkon Auditorium",
+    googleMapsUrl: "https://g.shrinkrl.com/XerRPs", // Your Google Maps location link
+    // ...
+  },
+  // Customize timeline, events, gallery images, gift registry, FAQs, etc.
+};
+```
+
+### 4. Update Site Metadata
+
+Update page titles and open-graph metadata for link previews in [`src/app/layout.tsx`](./src/app/layout.tsx):
+
+```typescript
+export const metadata: Metadata = {
+  title: "Bride & Groom — Wedding Celebration",
+  description: "Join us in celebrating our wedding on [Date] at [Venue].",
+};
+```
+
+---
+
+## 💻 Local Development
+
+Run the local development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser to view your invitation!
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🛠️ Build & Verification
 
-## Learn More
+Test production build locally:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run build
+npm run start
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🌐 Free Deployment (Vercel / Netlify)
 
-## Deploy on Vercel
+1. Push your customized repository to GitHub.
+2. Sign up on [Vercel](https://vercel.com) or [Netlify](https://netlify.com).
+3. Import your GitHub repository — it will automatically detect Next.js and deploy your live wedding invitation site in under a minute!
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🌟 Features Included
+
+- ⏳ **Live Countdown Timer** to the wedding date
+- 📍 **Venue & Interactive Map Links**
+- 📖 **Couple Story & Journey Timeline**
+- 📅 **Schedule & Events Itinerary**
+- 💌 **RSVP Form**
+- 🖼️ **Photo Gallery**
+- 🎁 **Gift Registry Information**
+- 📱 **Fully Responsive Mobile & Desktop Design**
+
+---
+
+Made with ❤️. Feel free to star ⭐️ this repository if you found it helpful!
