@@ -22,7 +22,7 @@ interface TimeLeft {
 }
 
 export default function Home() {
-  const [showCountdown, setShowCountdown] = useState(false);
+  const [activeSection, setActiveSection] = useState<0 | 1>(0);
   const [particles, setParticles] = useState<Particle[]>([]);
   const [mounted, setMounted] = useState(false);
   const [timeLeft, setTimeLeft] = useState<TimeLeft>({
@@ -33,6 +33,9 @@ export default function Home() {
     isToday: false,
     isPassed: false,
   });
+
+  const touchStartY = useRef<number | null>(null);
+  const isScrolling = useRef(false);
 
   // Generate particles on client only
   useEffect(() => {
@@ -49,6 +52,7 @@ export default function Home() {
     setMounted(true);
   }, []);
 
+  // Countdown timer logic
   useEffect(() => {
     const target = new Date("2026-09-06T12:00:00").getTime();
 
@@ -85,6 +89,62 @@ export default function Home() {
     return () => clearInterval(id);
   }, []);
 
+  // Handle wheel / scroll between pages
+  useEffect(() => {
+    const handleWheel = (e: WheelEvent) => {
+      if (isScrolling.current) return;
+      if (Math.abs(e.deltaY) < 25) return;
+
+      if (e.deltaY > 0 && activeSection === 0) {
+        isScrolling.current = true;
+        setActiveSection(1);
+        setTimeout(() => {
+          isScrolling.current = false;
+        }, 800);
+      } else if (e.deltaY < 0 && activeSection === 1) {
+        isScrolling.current = true;
+        setActiveSection(0);
+        setTimeout(() => {
+          isScrolling.current = false;
+        }, 800);
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowDown" || e.key === "PageDown") {
+        setActiveSection(1);
+      } else if (e.key === "ArrowUp" || e.key === "PageUp") {
+        setActiveSection(0);
+      }
+    };
+
+    window.addEventListener("wheel", handleWheel, { passive: true });
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("wheel", handleWheel);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [activeSection]);
+
+  // Touch swipe handling
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartY.current === null) return;
+    const diff = touchStartY.current - e.changedTouches[0].clientY;
+
+    if (diff > 45 && activeSection === 0) {
+      // Swiped up -> go to page 2 (Countdown)
+      setActiveSection(1);
+    } else if (diff < -45 && activeSection === 1) {
+      // Swiped down -> go to page 1 (Invitation)
+      setActiveSection(0);
+    }
+    touchStartY.current = null;
+  };
+
   return (
     <>
       <style>{`
@@ -101,10 +161,6 @@ export default function Home() {
           from { opacity: 0; transform: translateY(24px); }
           to   { opacity: 1; transform: translateY(0); }
         }
-        @keyframes scaleIn {
-          from { opacity: 0; transform: scale(0.96); }
-          to   { opacity: 1; transform: scale(1); }
-        }
         @keyframes pulse-ring {
           0%,100% { transform: translate(-50%,-50%) scale(1); opacity:0.06; }
           50%      { transform: translate(-50%,-50%) scale(1.06); opacity:0.12; }
@@ -113,9 +169,23 @@ export default function Home() {
           0%,100% { transform: translate(-50%,-50%) scale(1); opacity:0.04; }
           50%      { transform: translate(-50%,-50%) scale(1.04); opacity:0.09; }
         }
+        @keyframes pulse-ring3 {
+          0%,100% { transform: translate(-50%,-50%) scale(1); opacity:0.03; }
+          50%      { transform: translate(-50%,-50%) scale(1.03); opacity:0.07; }
+        }
         @keyframes todayGlow {
           0%,100% { text-shadow: 0 0 20px rgba(251,191,36,0.6), 0 0 40px rgba(251,191,36,0.3); }
           50%      { text-shadow: 0 0 35px rgba(251,191,36,0.9), 0 0 70px rgba(251,191,36,0.5); }
+        }
+        @keyframes bounceDown {
+          0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+          40% { transform: translateY(8px); }
+          60% { transform: translateY(4px); }
+        }
+        @keyframes bounceUp {
+          0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+          40% { transform: translateY(-8px); }
+          60% { transform: translateY(-4px); }
         }
         .particle {
           position: absolute;
@@ -141,12 +211,6 @@ export default function Home() {
           -webkit-backdrop-filter: blur(20px);
           border: 1px solid rgba(212,175,95,0.15);
         }
-        .glass-dark {
-          background: rgba(10,12,20,0.55);
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
-          border: 1px solid rgba(212,175,95,0.12);
-        }
         .ring1 {
           position: absolute; border-radius: 50%;
           border: 1px solid rgba(212,175,95,0.1);
@@ -166,28 +230,29 @@ export default function Home() {
           border: 1px solid rgba(212,175,95,0.04);
           width: 700px; height: 700px;
           left: 50%; top: 50%;
-          animation: pulse-ring 11s ease-in-out infinite reverse;
+          animation: pulse-ring3 11s ease-in-out infinite reverse;
         }
         .fade-slide-up { animation: fadeSlideUp 0.9s cubic-bezier(.22,1,.36,1) both; }
-        .scale-in { animation: scaleIn 0.5s cubic-bezier(.22,1,.36,1) both; }
         .today-glow { animation: todayGlow 2.5s ease-in-out infinite; }
+        .bounce-down { animation: bounceDown 2s infinite; }
+        .bounce-up { animation: bounceUp 2s infinite; }
         .divider-line {
           flex: 1;
           height: 1px;
           background: linear-gradient(90deg, transparent, rgba(212,175,95,0.5), transparent);
         }
-        .count-tile {
+        .count-tile-large {
           display: flex; flex-direction: column; align-items: center; justify-content: center;
-          padding: 14px 10px 10px;
-          border-radius: 14px;
-          background: rgba(10,12,22,0.7);
-          border: 1px solid rgba(212,175,95,0.14);
-          min-width: 62px;
+          padding: 24px 14px 18px;
+          border-radius: 20px;
+          background: rgba(10,12,22,0.75);
+          border: 1px solid rgba(212,175,95,0.2);
+          box-shadow: 0 8px 32px rgba(0,0,0,0.35);
           flex: 1;
         }
-        .count-num {
+        .count-num-large {
           font-family: var(--font-serif);
-          font-size: clamp(1.6rem, 5vw, 2.4rem);
+          font-size: clamp(2.4rem, 8vw, 3.8rem);
           font-weight: 400;
           line-height: 1;
           background: linear-gradient(135deg, #e8d08a, #fdf0c0, #c8a84b);
@@ -196,22 +261,24 @@ export default function Home() {
           background-clip: text;
           letter-spacing: -0.02em;
         }
-        .count-label {
-          font-size: 0.55rem;
+        .count-label-large {
+          font-size: 0.65rem;
           text-transform: uppercase;
-          letter-spacing: 0.2em;
-          color: rgba(255,255,255,0.35);
-          margin-top: 6px;
-          font-weight: 500;
+          letter-spacing: 0.25em;
+          color: rgba(255,255,255,0.4);
+          margin-top: 10px;
+          font-weight: 600;
         }
       `}</style>
 
-      <main
-        className="relative w-full min-h-screen flex flex-col items-center justify-center overflow-hidden"
+      <div
+        className="fixed inset-0 w-full h-full overflow-hidden select-none"
         style={{
           background: "radial-gradient(ellipse 90% 80% at 50% 10%, #0e1528 0%, #080c17 60%, #060810 100%)",
           fontFamily: "var(--font-sans)",
         }}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
       >
         {/* Noise texture overlay */}
         <div
@@ -242,7 +309,7 @@ export default function Home() {
           />
         </div>
 
-        {/* Rings */}
+        {/* Floating concentric rings */}
         <div className="absolute inset-0 pointer-events-none" style={{ overflow: "hidden" }}>
           <div className="ring1" />
           <div className="ring2" />
@@ -266,358 +333,463 @@ export default function Home() {
           />
         ))}
 
-        {/* Content */}
+        {/* Vertical Pagination Indicator / Navigation Dots */}
+        <div className="fixed right-4 sm:right-6 top-1/2 -translate-y-1/2 z-40 flex flex-col gap-3">
+          <button
+            onClick={() => setActiveSection(0)}
+            aria-label="Invitation Page"
+            className="transition-all duration-300 rounded-full"
+            style={{
+              width: activeSection === 0 ? "8px" : "6px",
+              height: activeSection === 0 ? "24px" : "6px",
+              background: activeSection === 0 ? "#c8a84b" : "rgba(255,255,255,0.25)",
+              boxShadow: activeSection === 0 ? "0 0 10px rgba(200,168,75,0.5)" : "none",
+            }}
+          />
+          <button
+            onClick={() => setActiveSection(1)}
+            aria-label="Countdown Page"
+            className="transition-all duration-300 rounded-full"
+            style={{
+              width: activeSection === 1 ? "8px" : "6px",
+              height: activeSection === 1 ? "24px" : "6px",
+              background: activeSection === 1 ? "#c8a84b" : "rgba(255,255,255,0.25)",
+              boxShadow: activeSection === 1 ? "0 0 10px rgba(200,168,75,0.5)" : "none",
+            }}
+          />
+        </div>
+
+        {/* Sliding 2-Page Container */}
         <div
-          className="relative z-10 w-full max-w-sm mx-auto px-5 py-12 flex flex-col items-center gap-0"
+          className="w-full h-full transition-transform duration-700 ease-[cubic-bezier(0.25,1,0.5,1)]"
+          style={{
+            transform: `translateY(-${activeSection * 100}%)`,
+          }}
         >
-
-          {/* Top eyebrow label */}
-          <div className="fade-slide-up" style={{ animationDelay: "0.1s" }}>
-            <p
-              style={{
-                fontSize: "0.6rem",
-                letterSpacing: "0.38em",
-                textTransform: "uppercase",
-                color: "rgba(212,175,95,0.7)",
-                fontWeight: 600,
-                textAlign: "center",
-                marginBottom: "28px",
-              }}
-            >
-              Together With Their Families
-            </p>
-          </div>
-
-          {/* Main card */}
-          <div
-            className="glass w-full rounded-3xl px-7 py-10 flex flex-col items-center gap-6 fade-slide-up"
-            style={{ animationDelay: "0.2s" }}
-          >
-            {/* Small decorative ornament */}
-            <div style={{ display: "flex", alignItems: "center", gap: 10, width: "100%" }}>
-              <div className="divider-line" />
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M12 2L13.5 9H21L15 13.5L17.5 21L12 16.5L6.5 21L9 13.5L3 9H10.5L12 2Z" fill="rgba(212,175,95,0.6)" />
-              </svg>
-              <div className="divider-line" />
-            </div>
-
-            {/* Couple names */}
-            <div style={{ textAlign: "center", lineHeight: 1 }}>
-              <h1
-                className="name-shimmer"
-                style={{
-                  fontFamily: "var(--font-serif)",
-                  fontSize: "clamp(3.2rem, 14vw, 5.5rem)",
-                  fontWeight: 300,
-                  letterSpacing: "-0.01em",
-                  display: "block",
-                }}
-              >
-                Thasni
-              </h1>
-
-              <div
-                style={{
-                  display: "flex", alignItems: "center",
-                  justifyContent: "center", gap: 14,
-                  margin: "8px 0",
-                }}
-              >
-                <div className="divider-line" />
-                <span
-                  style={{
-                    fontFamily: "var(--font-serif)",
-                    fontSize: "1.5rem",
-                    fontStyle: "italic",
-                    color: "rgba(212,175,95,0.8)",
-                    lineHeight: 1,
-                  }}
-                >
-                  &amp;
-                </span>
-                <div className="divider-line" />
-              </div>
-
-              <h1
-                className="name-shimmer"
-                style={{
-                  fontFamily: "var(--font-serif)",
-                  fontSize: "clamp(3.2rem, 14vw, 5.5rem)",
-                  fontWeight: 300,
-                  letterSpacing: "-0.01em",
-                  display: "block",
-                }}
-              >
-                Midlaj
-              </h1>
-            </div>
-
-            {/* Bottom ornament */}
-            <div style={{ display: "flex", alignItems: "center", gap: 10, width: "100%" }}>
-              <div className="divider-line" />
-              <svg width="10" height="10" viewBox="0 0 10 10">
-                <circle cx="5" cy="5" r="2" fill="rgba(212,175,95,0.5)" />
-              </svg>
-              <div className="divider-line" />
-            </div>
-
-            {/* Invite line */}
-            <p
-              style={{
-                fontSize: "0.6rem",
-                letterSpacing: "0.28em",
-                textTransform: "uppercase",
-                color: "rgba(255,255,255,0.3)",
-                textAlign: "center",
-                marginTop: -8,
-              }}
-            >
-              Invite You To Celebrate Their Wedding
-            </p>
-          </div>
-
-          {/* Date / Time / Venue block */}
-          <div
-            className="glass w-full rounded-2xl px-6 py-6 flex flex-col items-center gap-4 fade-slide-up"
-            style={{ animationDelay: "0.35s", marginTop: 12 }}
-          >
-            {/* Date row */}
-            <div style={{ textAlign: "center" }}>
-              <p
-                style={{
-                  fontFamily: "var(--font-serif)",
-                  fontSize: "clamp(1.2rem, 5vw, 1.6rem)",
-                  fontWeight: 300,
-                  color: "#e8d08a",
-                  letterSpacing: "0.04em",
-                }}
-              >
-                September 6, 2026
-              </p>
+          {/* ================= PAGE 1: INVITATION CARD ================= */}
+          <section className="w-full h-full flex flex-col items-center justify-between px-5 py-8 sm:py-12 overflow-hidden relative">
+            {/* Top Eyebrow */}
+            <div className="z-10 pt-2 text-center fade-slide-up" style={{ animationDelay: "0.1s" }}>
               <p
                 style={{
                   fontSize: "0.6rem",
-                  letterSpacing: "0.3em",
+                  letterSpacing: "0.38em",
                   textTransform: "uppercase",
-                  color: "rgba(255,255,255,0.32)",
-                  marginTop: 5,
+                  color: "rgba(212,175,95,0.7)",
+                  fontWeight: 600,
+                  textAlign: "center",
                 }}
               >
-                12 : 00 &nbsp;&bull;&nbsp; Afternoon
+                Together With Their Families
               </p>
             </div>
 
-            {/* Hairline */}
-            <div
-              style={{
-                width: "100%", height: 1,
-                background: "linear-gradient(90deg, transparent, rgba(212,175,95,0.2), transparent)",
-              }}
-            />
-
-            {/* Venue chip */}
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(212,175,95,0.75)" strokeWidth="1.5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              <span
-                style={{
-                  fontSize: "0.78rem",
-                  color: "rgba(255,255,255,0.65)",
-                  letterSpacing: "0.08em",
-                  fontWeight: 400,
-                }}
+            {/* Main Invitation Card */}
+            <div className="z-10 my-auto w-full max-w-sm flex flex-col items-center gap-3">
+              {/* Couple Card */}
+              <div
+                className="glass w-full rounded-3xl px-7 py-9 flex flex-col items-center gap-5 fade-slide-up"
+                style={{ animationDelay: "0.2s" }}
               >
-                Parkon Auditorium
-              </span>
+                {/* Small decorative ornament */}
+                <div style={{ display: "flex", alignItems: "center", gap: 10, width: "100%" }}>
+                  <div className="divider-line" />
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 2L13.5 9H21L15 13.5L17.5 21L12 16.5L6.5 21L9 13.5L3 9H10.5L12 2Z" fill="rgba(212,175,95,0.6)" />
+                  </svg>
+                  <div className="divider-line" />
+                </div>
+
+                {/* Couple names */}
+                <div style={{ textAlign: "center", lineHeight: 1 }}>
+                  <h1
+                    className="name-shimmer"
+                    style={{
+                      fontFamily: "var(--font-serif)",
+                      fontSize: "clamp(3rem, 13vw, 5rem)",
+                      fontWeight: 300,
+                      letterSpacing: "-0.01em",
+                      display: "block",
+                    }}
+                  >
+                    Thasni
+                  </h1>
+
+                  <div
+                    style={{
+                      display: "flex", alignItems: "center",
+                      justifyContent: "center", gap: 14,
+                      margin: "8px 0",
+                    }}
+                  >
+                    <div className="divider-line" />
+                    <span
+                      style={{
+                        fontFamily: "var(--font-serif)",
+                        fontSize: "1.4rem",
+                        fontStyle: "italic",
+                        color: "rgba(212,175,95,0.8)",
+                        lineHeight: 1,
+                      }}
+                    >
+                      &amp;
+                    </span>
+                    <div className="divider-line" />
+                  </div>
+
+                  <h1
+                    className="name-shimmer"
+                    style={{
+                      fontFamily: "var(--font-serif)",
+                      fontSize: "clamp(3rem, 13vw, 5rem)",
+                      fontWeight: 300,
+                      letterSpacing: "-0.01em",
+                      display: "block",
+                    }}
+                  >
+                    Midlaj
+                  </h1>
+                </div>
+
+                {/* Bottom ornament */}
+                <div style={{ display: "flex", alignItems: "center", gap: 10, width: "100%" }}>
+                  <div className="divider-line" />
+                  <svg width="10" height="10" viewBox="0 0 10 10">
+                    <circle cx="5" cy="5" r="2" fill="rgba(212,175,95,0.5)" />
+                  </svg>
+                  <div className="divider-line" />
+                </div>
+
+                {/* Invite line */}
+                <p
+                  style={{
+                    fontSize: "0.58rem",
+                    letterSpacing: "0.28em",
+                    textTransform: "uppercase",
+                    color: "rgba(255,255,255,0.3)",
+                    textAlign: "center",
+                    marginTop: -6,
+                  }}
+                >
+                  Invite You To Celebrate Their Wedding
+                </p>
+              </div>
+
+              {/* Date / Time / Venue Card */}
+              <div
+                className="glass w-full rounded-2xl px-6 py-5 flex flex-col items-center gap-3.5 fade-slide-up"
+                style={{ animationDelay: "0.35s" }}
+              >
+                {/* Date row */}
+                <div style={{ textAlign: "center" }}>
+                  <p
+                    style={{
+                      fontFamily: "var(--font-serif)",
+                      fontSize: "clamp(1.2rem, 5vw, 1.5rem)",
+                      fontWeight: 300,
+                      color: "#e8d08a",
+                      letterSpacing: "0.04em",
+                    }}
+                  >
+                    September 6, 2026
+                  </p>
+                  <p
+                    style={{
+                      fontSize: "0.58rem",
+                      letterSpacing: "0.3em",
+                      textTransform: "uppercase",
+                      color: "rgba(255,255,255,0.32)",
+                      marginTop: 4,
+                    }}
+                  >
+                    12 : 00 &nbsp;&bull;&nbsp; Afternoon
+                  </p>
+                </div>
+
+                {/* Hairline */}
+                <div
+                  style={{
+                    width: "100%", height: 1,
+                    background: "linear-gradient(90deg, transparent, rgba(212,175,95,0.2), transparent)",
+                  }}
+                />
+
+                {/* Venue */}
+                <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(212,175,95,0.75)" strokeWidth="1.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span
+                    style={{
+                      fontSize: "0.75rem",
+                      color: "rgba(255,255,255,0.65)",
+                      letterSpacing: "0.08em",
+                      fontWeight: 400,
+                    }}
+                  >
+                    Parkon Auditorium
+                  </span>
+                </div>
+
+                {/* Map button */}
+                <a
+                  href="https://g.shrinkrl.com/XerRPs"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "9px 22px",
+                    borderRadius: 100,
+                    background: "linear-gradient(135deg, #c8a84b, #e8d08a)",
+                    color: "#0a0c14",
+                    fontSize: "0.58rem",
+                    fontWeight: 700,
+                    letterSpacing: "0.25em",
+                    textTransform: "uppercase",
+                    textDecoration: "none",
+                    transition: "all 0.3s ease",
+                    boxShadow: "0 4px 20px rgba(200,168,75,0.25)",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLAnchorElement).style.transform = "translateY(-2px)";
+                    (e.currentTarget as HTMLAnchorElement).style.boxShadow = "0 8px 28px rgba(200,168,75,0.4)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLAnchorElement).style.transform = "translateY(0)";
+                    (e.currentTarget as HTMLAnchorElement).style.boxShadow = "0 4px 20px rgba(200,168,75,0.25)";
+                  }}
+                >
+                  View on Map
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </a>
+              </div>
             </div>
 
-            {/* Map button */}
-            <a
-              href="https://g.shrinkrl.com/XerRPs"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "10px 24px",
-                borderRadius: 100,
-                background: "linear-gradient(135deg, #c8a84b, #e8d08a)",
-                color: "#0a0c14",
-                fontSize: "0.6rem",
-                fontWeight: 700,
-                letterSpacing: "0.25em",
-                textTransform: "uppercase",
-                textDecoration: "none",
-                transition: "all 0.3s ease",
-                boxShadow: "0 4px 24px rgba(200,168,75,0.25)",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLAnchorElement).style.transform = "translateY(-2px)";
-                (e.currentTarget as HTMLAnchorElement).style.boxShadow = "0 8px 32px rgba(200,168,75,0.4)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLAnchorElement).style.transform = "translateY(0)";
-                (e.currentTarget as HTMLAnchorElement).style.boxShadow = "0 4px 24px rgba(200,168,75,0.25)";
-              }}
-            >
-              View on Map
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-              </svg>
-            </a>
-          </div>
-
-          {/* Countdown toggle */}
-          <div
-            className="w-full fade-slide-up"
-            style={{ animationDelay: "0.5s", marginTop: 12 }}
-          >
+            {/* Bottom Swipe Down Indicator */}
             <button
-              onClick={() => setShowCountdown(!showCountdown)}
-              style={{
-                width: "100%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 8,
-                padding: "12px 20px",
-                borderRadius: 14,
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(212,175,95,0.14)",
-                color: "rgba(255,255,255,0.5)",
-                fontSize: "0.62rem",
-                fontWeight: 600,
-                letterSpacing: "0.22em",
-                textTransform: "uppercase",
-                cursor: "pointer",
-                transition: "all 0.3s ease",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.background = "rgba(212,175,95,0.08)";
-                (e.currentTarget as HTMLButtonElement).style.color = "rgba(212,175,95,0.85)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.04)";
-                (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.5)";
-              }}
+              onClick={() => setActiveSection(1)}
+              className="z-10 pb-2 flex flex-col items-center gap-1.5 cursor-pointer group transition-opacity hover:opacity-100 opacity-80"
+              style={{ background: "transparent", border: "none" }}
             >
-              {showCountdown ? "Hide Countdown" : "Show Countdown"}
-              <svg
-                width="13"
-                height="13"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
+              <span
                 style={{
-                  transform: showCountdown ? "rotate(180deg)" : "rotate(0deg)",
-                  transition: "transform 0.35s cubic-bezier(.22,1,.36,1)",
+                  fontSize: "0.58rem",
+                  letterSpacing: "0.26em",
+                  textTransform: "uppercase",
+                  color: "rgba(212,175,95,0.8)",
+                  fontWeight: 600,
                 }}
               >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-              </svg>
+                Swipe Down For Countdown
+              </span>
+              <div className="bounce-down">
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="rgba(212,175,95,0.8)"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M7 13l5 5 5-5M7 6l5 5 5-5" />
+                </svg>
+              </div>
+            </button>
+          </section>
+
+          {/* ================= PAGE 2: SWIPE DOWN COUNTDOWN PAGE ================= */}
+          <section className="w-full h-full flex flex-col items-center justify-between px-5 py-8 sm:py-12 overflow-hidden relative">
+            {/* Top Swipe Up Back Indicator */}
+            <button
+              onClick={() => setActiveSection(0)}
+              className="z-10 pt-2 flex flex-col items-center gap-1.5 cursor-pointer group transition-opacity hover:opacity-100 opacity-80"
+              style={{ background: "transparent", border: "none" }}
+            >
+              <div className="bounce-up">
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="rgba(212,175,95,0.8)"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M17 11l-5-5-5 5M17 18l-5-5-5 5" />
+                </svg>
+              </div>
+              <span
+                style={{
+                  fontSize: "0.58rem",
+                  letterSpacing: "0.26em",
+                  textTransform: "uppercase",
+                  color: "rgba(212,175,95,0.8)",
+                  fontWeight: 600,
+                }}
+              >
+                Swipe Up For Invitation
+              </span>
             </button>
 
-            {/* Countdown panel */}
-            {showCountdown && (
-              <div
-                className="glass scale-in w-full rounded-2xl px-5 py-6 flex flex-col items-center gap-5"
-                style={{ marginTop: 8 }}
-              >
-                {timeLeft.isToday ? (
-                  <div style={{ textAlign: "center", paddingBlock: 8 }}>
-                    <p
-                      className="today-glow"
-                      style={{
-                        fontFamily: "var(--font-serif)",
-                        fontSize: "clamp(1.5rem, 7vw, 2.2rem)",
-                        color: "#fbbf24",
-                        fontWeight: 300,
-                        letterSpacing: "0.03em",
-                      }}
-                    >
-                      💍 Today Marriage 💍
-                    </p>
-                    <p
-                      style={{
-                        fontSize: "0.6rem",
-                        letterSpacing: "0.28em",
-                        textTransform: "uppercase",
-                        color: "rgba(255,255,255,0.35)",
-                        marginTop: 10,
-                      }}
-                    >
-                      Welcome to our special day
-                    </p>
-                  </div>
-                ) : timeLeft.isPassed ? (
-                  <div style={{ textAlign: "center" }}>
-                    <p
-                      style={{
-                        fontFamily: "var(--font-serif)",
-                        fontSize: "1.5rem",
-                        color: "#e8d08a",
-                        fontWeight: 300,
-                      }}
-                    >
-                      Marriage Celebrated ❤️
-                    </p>
-                  </div>
-                ) : (
-                  <>
-                    <p
-                      style={{
-                        fontSize: "0.55rem",
-                        letterSpacing: "0.3em",
-                        textTransform: "uppercase",
-                        color: "rgba(255,255,255,0.28)",
-                        textAlign: "center",
-                      }}
-                    >
-                      Counting Down
-                    </p>
-                    <div style={{ display: "flex", gap: 8, width: "100%" }}>
-                      {[
-                        { value: timeLeft.days, label: "Days" },
-                        { value: timeLeft.hours, label: "Hours" },
-                        { value: timeLeft.minutes, label: "Mins" },
-                        { value: timeLeft.seconds, label: "Secs" },
-                      ].map((item) => (
-                        <div key={item.label} className="count-tile">
-                          <span className="count-num">
-                            {String(item.value).padStart(2, "0")}
-                          </span>
-                          <span className="count-label">{item.label}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                )}
+            {/* Countdown Page Content */}
+            <div className="z-10 my-auto w-full max-w-md flex flex-col items-center gap-6 text-center">
+              {/* Couple Monogram / Heading */}
+              <div className="space-y-1">
+                <p
+                  style={{
+                    fontSize: "0.62rem",
+                    letterSpacing: "0.35em",
+                    textTransform: "uppercase",
+                    color: "rgba(212,175,95,0.7)",
+                    fontWeight: 600,
+                  }}
+                >
+                  Thasni &amp; Midlaj
+                </p>
+                <h2
+                  style={{
+                    fontFamily: "var(--font-serif)",
+                    fontSize: "clamp(1.8rem, 6vw, 2.4rem)",
+                    fontWeight: 300,
+                    color: "#fdf0c0",
+                    letterSpacing: "0.02em",
+                  }}
+                >
+                  The Big Day
+                </h2>
+                <p
+                  style={{
+                    fontSize: "0.65rem",
+                    letterSpacing: "0.25em",
+                    textTransform: "uppercase",
+                    color: "rgba(255,255,255,0.4)",
+                  }}
+                >
+                  September 6, 2026 &bull; 12:00 PM
+                </p>
               </div>
-            )}
-          </div>
 
-          {/* Footer line */}
-          <p
-            className="fade-slide-up"
-            style={{
-              animationDelay: "0.65s",
-              marginTop: 28,
-              fontSize: "0.55rem",
-              letterSpacing: "0.3em",
-              textTransform: "uppercase",
-              color: "rgba(255,255,255,0.18)",
-              textAlign: "center",
-            }}
-          >
-            We look forward to celebrating with you
-          </p>
+              {/* Main Countdown or Today Notification */}
+              {timeLeft.isToday ? (
+                <div
+                  className="glass w-full rounded-3xl p-8 sm:p-10 flex flex-col items-center justify-center gap-3 border-amber-400/30"
+                  style={{ boxShadow: "0 0 50px rgba(251,191,36,0.15)" }}
+                >
+                  <span className="text-4xl sm:text-5xl animate-bounce">💍</span>
+                  <h3
+                    className="today-glow"
+                    style={{
+                      fontFamily: "var(--font-serif)",
+                      fontSize: "clamp(2rem, 8vw, 3.2rem)",
+                      color: "#fbbf24",
+                      fontWeight: 400,
+                      letterSpacing: "0.03em",
+                      lineHeight: 1.1,
+                    }}
+                  >
+                    Today Marriage
+                  </h3>
+                  <div className="divider-line w-24 my-2" />
+                  <p
+                    style={{
+                      fontSize: "0.7rem",
+                      letterSpacing: "0.28em",
+                      textTransform: "uppercase",
+                      color: "rgba(255,255,255,0.7)",
+                    }}
+                  >
+                    Welcome To Our Wedding Day!
+                  </p>
+                  <p
+                    style={{
+                      fontSize: "0.6rem",
+                      letterSpacing: "0.15em",
+                      color: "rgba(212,175,95,0.8)",
+                    }}
+                  >
+                    Parkon Auditorium &bull; 12:00 PM
+                  </p>
+                </div>
+              ) : timeLeft.isPassed ? (
+                <div className="glass w-full rounded-3xl p-8 flex flex-col items-center justify-center gap-2">
+                  <h3
+                    style={{
+                      fontFamily: "var(--font-serif)",
+                      fontSize: "1.8rem",
+                      color: "#e8d08a",
+                      fontWeight: 300,
+                    }}
+                  >
+                    Marriage Celebrated ❤️
+                  </h3>
+                  <p className="text-xs text-slate-400 tracking-wider">
+                    Thank you for being part of our special journey!
+                  </p>
+                </div>
+              ) : (
+                <div className="w-full space-y-5">
+                  {/* Grid of countdown units */}
+                  <div className="grid grid-cols-4 gap-2.5 sm:gap-4 w-full">
+                    {[
+                      { value: timeLeft.days, label: "Days" },
+                      { value: timeLeft.hours, label: "Hours" },
+                      { value: timeLeft.minutes, label: "Mins" },
+                      { value: timeLeft.seconds, label: "Secs" },
+                    ].map((item) => (
+                      <div key={item.label} className="count-tile-large">
+                        <span className="count-num-large">
+                          {String(item.value).padStart(2, "0")}
+                        </span>
+                        <span className="count-label-large">{item.label}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Message under countdown */}
+                  <div className="glass rounded-2xl p-4 flex items-center justify-center gap-3">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(212,175,95,0.8)" strokeWidth="1.5">
+                      <circle cx="12" cy="12" r="10" />
+                      <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                    <span
+                      style={{
+                        fontSize: "0.62rem",
+                        letterSpacing: "0.2em",
+                        textTransform: "uppercase",
+                        color: "rgba(255,255,255,0.6)",
+                      }}
+                    >
+                      Counting every moment until we say &ldquo;I do&rdquo;
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer text */}
+            <div className="z-10 pb-2 text-center">
+              <p
+                style={{
+                  fontSize: "0.55rem",
+                  letterSpacing: "0.3em",
+                  textTransform: "uppercase",
+                  color: "rgba(255,255,255,0.2)",
+                }}
+              >
+                We look forward to celebrating with you
+              </p>
+            </div>
+          </section>
         </div>
-      </main>
+      </div>
     </>
   );
 }
