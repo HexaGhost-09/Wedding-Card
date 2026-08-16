@@ -73,11 +73,11 @@ export interface WeddingData {
 
 export const weddingData: WeddingData = {
   couple: {
-    brideFirstName: "Eleanor",
-    brideLastName: "Vance",
-    groomFirstName: "Alexander",
-    groomLastName: "Wright",
-    initials: "E & A",
+    brideFirstName: "Thasni",
+    brideLastName: "",
+    groomFirstName: "Midlaj",
+    groomLastName: "",
+    initials: "T & M",
     tagline: "Together with their families, invite you to celebrate their wedding day.",
     welcomeMessage: "We are deeply grateful for your presence in our lives and cannot wait to share this magical day of love, joy, and new beginnings with you in Florence.",
     heroImage: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=2000",
@@ -86,7 +86,7 @@ export const weddingData: WeddingData = {
     storyContent: [
       "Our story began five years ago on a crisp autumn evening in Paris. A chance encounter at a cozy bookstore café quickly turned into endless conversations about art, travel, and our shared dreams for the future.",
       "Over the years, we've explored cobblestone streets across Europe, hiked mountain peaks, and built a sanctuary of warmth and laughter in our home. Every moment has brought us closer together.",
-      "Last summer, amidst the olive groves of Tuscany at sunset, Alexander asked the easiest question Eleanor has ever answered. We are overjoyed to welcome you to the next chapter of our journey."
+      "Last summer, amidst the olive groves of Tuscany at sunset, Midlaj asked the easiest question Thasni has ever answered. We are overjoyed to welcome you to the next chapter of our journey."
     ],
     bridePhoto: "https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&q=80&w=1200",
     groomPhoto: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=1200",
@@ -130,7 +130,7 @@ export const weddingData: WeddingData = {
     {
       year: "August 2025",
       title: "The Proposal",
-      description: "Alexander proposed under the golden hour light in the olive orchards of Bellosguardo.",
+      description: "Midlaj proposed under the golden hour light in the olive orchards of Bellosguardo.",
       image: "https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&q=80&w=800",
     },
     {

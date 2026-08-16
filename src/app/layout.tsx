@@ -16,10 +16,10 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Eleanor & Alexander — Wedding Celebration",
-  description: "Join us in celebrating the wedding of Eleanor Vance & Alexander Wright on September 20, 2026 at Villa Bella Vista, Florence.",
+  title: "Thasni & Midlaj — Wedding Celebration",
+  description: "Join us in celebrating the wedding of Thasni & Midlaj on September 20, 2026 at Villa Bella Vista, Florence.",
   openGraph: {
-    title: "Eleanor & Alexander — Wedding Invitation",
+    title: "Thasni & Midlaj — Wedding Invitation",
     description: "Join us in celebrating our wedding on September 20, 2026.",
     type: "website",
   },
