@@ -35,7 +35,7 @@ export default function RootLayout({
       lang="en"
       className={`${cormorant.variable} ${jakarta.variable} scroll-smooth h-full antialiased`}
     >
-      <body className="font-sans bg-[#FAF8F5] text-[#1A1A1A] min-h-full flex flex-col selection:bg-[#C5A059]/20 selection:text-[#1A1A1A]">
+      <body className="font-sans bg-[#0B0F17] text-[#E2E8F0] min-h-full flex flex-col items-center justify-center selection:bg-amber-500/20 selection:text-amber-200">
         {children}
       </body>
     </html>
